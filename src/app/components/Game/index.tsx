@@ -52,7 +52,10 @@ const Game = () => {
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const groundRef = useRef<Box | null>(null);
-  const playerRef = useRef<Box | null>(null);
+  const playerRef = useRef<{
+    hitbox: Box;
+    model: THREE.Object3D<THREE.Object3DEventMap>;
+  } | null>(null);
   const enemyModels = useRef<THREE.Object3D<THREE.Object3DEventMap>[]>([]);
 
   const onKeyDown = (event: KeyboardEvent) => {
@@ -78,13 +81,15 @@ const Game = () => {
   };
 
   const animate = () => {
+    if (!playerRef.current) return;
+
     const scene = sceneRef.current;
     const camera = cameraRef.current;
     const renderer = rendererRef.current;
-    const cube = playerRef.current;
+    const { hitbox: cube, model } = playerRef.current;
     const ground = groundRef.current;
 
-    if (!scene || !camera || !renderer || !cube || !ground) return;
+    if (!scene || !camera || !renderer || !ground) return;
 
     animationRef.current = requestAnimationFrame(animate);
 
@@ -92,10 +97,16 @@ const Game = () => {
     cube.velocity.x = 0;
     cube.velocity.z = 0;
 
-    if (keysRef.current.a) cube.velocity.x = -BASE_SPEED;
-    else if (keysRef.current.d) cube.velocity.x = BASE_SPEED;
+    if (keysRef.current.a) {
+      cube.velocity.x = -BASE_SPEED;
+      model.rotation.z += 0.05;
+    } else if (keysRef.current.d) {
+      cube.velocity.x = BASE_SPEED;
+      model.rotation.z -= 0.05;
+    }
 
     cube.update(ground);
+    model.rotation.x -= 0.05; // rotate forward
 
     if (
       gameStateRef.current === GameState.PLAYING ||
@@ -214,7 +225,7 @@ const Game = () => {
 
     const createPlayerObject = async () => {
       const { hitbox, model } = await CreateBall();
-      playerRef.current = hitbox;
+      playerRef.current = { hitbox, model };
       scene.add(hitbox);
       scene.add(model);
 

@@ -85,7 +85,6 @@ export class Box extends THREE.Mesh {
 
     if (this.modelMesh) {
       this.modelMesh.position.copy(this.position);
-      this.modelMesh.rotation.copy(this.rotation); // Optional
     }
   }
 
