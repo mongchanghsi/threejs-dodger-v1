@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import {
   checkCollision,
@@ -16,6 +16,9 @@ import {
   CreateBall,
   getSpeed,
   preloadEnemyModels,
+  CalculateEnemySpawnPosition,
+  GROUND_WIDTH,
+  checkIfPlayerFalls,
 } from "./utils";
 import { Box } from "./Box";
 // import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -112,6 +115,11 @@ const Game = () => {
       gameStateRef.current === GameState.PLAYING ||
       gameStateRef.current === GameState.GAME_OVER
     ) {
+      if (checkIfPlayerFalls({ box1: cube, box2: ground })) {
+        cancelAnimationFrame(animationRef.current);
+        toggleGameState(GameState.GAME_OVER);
+      }
+
       enemiesRef.current.forEach(({ hitbox: enemy, model: _ }) => {
         enemy.update(ground);
 
@@ -126,8 +134,8 @@ const Game = () => {
             setPoints((prev) => prev + 1);
             pointsRef.current++;
 
-            if (spawnDelayFrameRef.current >= 100) {
-              spawnDelayFrameRef.current -= 5;
+            if (spawnDelayFrameRef.current >= 50) {
+              spawnDelayFrameRef.current -= 10;
             }
           }
         }
@@ -145,9 +153,14 @@ const Game = () => {
 
       if (framesRef.current % spawnDelayFrameRef.current === 0) {
         const numEnemy = Math.floor(Math.random() * 3) + 1;
+        const enemyPositions = CalculateEnemySpawnPosition(
+          numEnemy,
+          GROUND_WIDTH - 1
+        );
         for (let i = 0; i < numEnemy; i++) {
           const { hitbox, model } = CreateEnemy(
             enemyModels.current,
+            enemyPositions[i],
             getSpeed(pointsRef.current)
           );
           scene.add(model);
@@ -260,16 +273,19 @@ const Game = () => {
     framesRef.current = 0;
     spawnDelayFrameRef.current = 200;
     keysRef.current = { a: false, d: false };
+    playerRef.current!.hitbox.position.x = 0;
+    playerRef.current!.hitbox.position.y = 0;
+    playerRef.current!.hitbox.position.z = 0;
 
     toggleGameState(GameState.PLAYING);
 
     animationRef.current = requestAnimationFrame(animate);
   };
 
-  const toggleGameState = (state: GameState) => {
+  const toggleGameState = useCallback((state: GameState) => {
     setGameState(state);
     gameStateRef.current = state;
-  };
+  }, []);
 
   return (
     <div className="relative w-full h-full">

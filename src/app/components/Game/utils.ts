@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as THREE from "three";
-import { Box } from "./Box";
+import { Box, Coordinate } from "./Box";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 export const CAMERA_Z = 10;
 export const CAMERA_Y = 3;
-const GROUND_WIDTH = 10;
+export const GROUND_WIDTH = 10;
 const GROUND_DEPTH = 40;
-const MAXIMUM_ENEMY_VELOCITY = 5;
+const MAXIMUM_ENEMY_VELOCITY = 0.1;
 const BASE_ENEMY_VELOCITY = 0.05;
 const POINTS_DIVIDER = 100;
 
@@ -122,6 +122,7 @@ export const CreateBoxEnemy = (velocity: number = 0.02) => {
 
 export const CreateEnemy = (
   enemyModels: THREE.Object3D<THREE.Object3DEventMap>[],
+  position: Coordinate,
   velocity: number = 0.02
 ) => {
   const hitbox = new Box({
@@ -129,11 +130,7 @@ export const CreateEnemy = (
     height: 1,
     depth: 1,
     color: "#ffffff",
-    position: {
-      x: (Math.random() - 0.5) * GROUND_WIDTH,
-      y: 0,
-      z: -GROUND_DEPTH / 2,
-    },
+    position,
     velocity: {
       x: 0,
       y: 0,
@@ -148,6 +145,32 @@ export const CreateEnemy = (
   hitbox.attachModel(modelClone);
 
   return { hitbox, model: modelClone };
+};
+
+export const CalculateEnemySpawnPosition = (
+  numEnemy: number,
+  spawnXRange: number
+) => {
+  const spawnPositions: Coordinate[] = [];
+  const slotWidth = spawnXRange / numEnemy; // Divide the space with number of enemies slots
+
+  for (let i = 0; i < numEnemy; i++) {
+    const z = Math.random() < 0.5 ? -GROUND_DEPTH / 2 : -GROUND_DEPTH / 2 + 5;
+
+    const slotCenter = -spawnXRange / 2 + slotWidth * (i + 0.5); // slotWidth * (i + 0.5) represents the center coordinate of each slot
+
+    // Random offset inside the slot (±30% of slot width)
+    const randomOffset = (Math.random() - 0.5) * slotWidth * 0.6;
+    const x = slotCenter + randomOffset;
+
+    spawnPositions.push({
+      x,
+      y: 0,
+      z,
+    });
+  }
+
+  return spawnPositions;
 };
 
 export const checkCollision = ({ box1, box2 }: { box1: Box; box2: Box }) => {
@@ -238,4 +261,17 @@ export const normalizeModelSize = (model: THREE.Object3D, targetSize = 1) => {
   const newBox = new THREE.Box3().setFromObject(model);
   const newMinY = newBox.min.y;
   model.position.y -= newMinY;
+};
+
+export const checkIfPlayerFalls = ({
+  box1,
+  box2,
+}: {
+  box1: Box;
+  box2: Box;
+}) => {
+  return (
+    box1.right - box1.width / 4 < box2.left ||
+    box1.left + box1.width / 4 > box2.right
+  );
 };

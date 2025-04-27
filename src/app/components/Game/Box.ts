@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { checkCollision } from "./utils";
 
-type Coordinate = {
+export type Coordinate = {
   x: number;
   y: number;
   z: number;
