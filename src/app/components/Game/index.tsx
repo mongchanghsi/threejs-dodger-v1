@@ -290,24 +290,35 @@ const Game = () => {
   return (
     <div className="relative w-full h-full">
       {gameState === GameState.IDLE && (
-        <div className="absolute z-2 top-0 right-0 left-0 bottom-0 flex flex-col items-center justify-center">
-          <button onClick={startGame}>START GAME</button>
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/50 text-white">
+          <h1 className="text-4xl font-bold mb-6">READY TO PLAY?</h1>
+          <button
+            onClick={startGame}
+            className="px-6 py-3 text-lg font-semibold bg-green-500 hover:bg-green-600 rounded-lg transition"
+          >
+            START GAME
+          </button>
         </div>
       )}
 
       <div ref={mountRef} />
 
       {gameState === GameState.PLAYING && (
-        <div className="absolute z-1 top-0 left-1/2 -translate-x-1/2">
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 text-white text-2xl font-bold drop-shadow-md">
           {points}
         </div>
       )}
 
       {gameState === GameState.GAME_OVER && (
-        <div className="absolute z-2 top-0 right-0 left-0 bottom-0 flex flex-col items-center justify-center">
-          <p>GAME OVER</p>
-          <p>Points: {points}</p>
-          <button onClick={startGame}>PLAY AGAIN</button>
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/70 text-white">
+          <h1 className="text-5xl font-extrabold mb-4">GAME OVER</h1>
+          <p className="text-2xl mb-8">Points: {points}</p>
+          <button
+            onClick={startGame}
+            className="px-6 py-3 text-lg font-semibold bg-red-500 hover:bg-red-600 rounded-lg transition"
+          >
+            PLAY AGAIN
+          </button>
         </div>
       )}
     </div>
